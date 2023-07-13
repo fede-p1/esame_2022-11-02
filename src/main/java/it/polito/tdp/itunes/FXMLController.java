@@ -5,9 +5,16 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
+
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
 
 import it.polito.tdp.itunes.model.Model;
+import it.polito.tdp.itunes.model.Track;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -32,7 +39,7 @@ public class FXMLController {
     private Button btnPlaylist; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbGenere"
-    private ComboBox<?> cmbGenere; // Value injected by FXMLLoader
+    private ComboBox<String> cmbGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtDTOT"
     private TextField txtDTOT; // Value injected by FXMLLoader
@@ -48,11 +55,78 @@ public class FXMLController {
 
     @FXML
     void doCalcolaPlaylist(ActionEvent event) {
+    	
+    	if (this.txtDTOT.getText() == "") {
+    		txtResult.setText("Inserisci il valore totale");
+    		return;
+    	}
+    	try {
+    		Double.parseDouble(txtDTOT.getText());
+    	}
+    	catch (Exception e) {
+    		txtResult.setText("Inserisci un valore numerico (dTOT)");
+    		return;
+    	}
+    	
+    	txtResult.setText("LA MIA PLAYLIST:\n");
+    	
+    	List<Track> playlist = model.getPlaylist(Double.parseDouble(txtDTOT.getText()));
+    	
+    	for (Track t : playlist)
+    		txtResult.appendText(t.toString() + '\n');
 
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	
+    	if (this.cmbGenere.getValue() == null) {
+    		txtResult.setText("Scegli un genere");
+    		return;
+    	}
+    	
+    	if (this.txtMin.getText() == "") {
+    		txtResult.setText("Inserisci il valore minimo");
+    		return;
+    	}
+    	try {
+    		if (Double.parseDouble(txtMin.getText()) < model.getMin(cmbGenere.getValue())) {
+    			txtResult.setText("Inserire un valore minimo > di: " + model.getMin(cmbGenere.getValue()));
+    			return;
+    		}
+    	}
+    	catch (Exception e) {
+    		txtResult.setText("Inserisci un valore numerico (min)");
+    		return;
+    	}
+    	
+    	if (this.txtMax.getText() == "") {
+    		txtResult.setText("Inserisci il valore massimo");
+    		return;
+    	}
+    	try {
+    		if (Double.parseDouble(txtMax.getText()) > model.getMax(cmbGenere.getValue())) {
+    			txtResult.setText("Inserire un valore massimo < di: " + model.getMax(cmbGenere.getValue()));
+    			return;
+    		}
+    	}
+    	catch (Exception e) {
+    		txtResult.setText("Inserisci un valore numerico (max)");
+    		return;
+    	}
+    	
+    	SimpleGraph<Track, DefaultEdge> graph = model.creaGrafo(cmbGenere.getValue(), Double.parseDouble(txtMin.getText()), Double.parseDouble(txtMax.getText()));
+    	
+    	txtResult.setText("Grafo creato con " + graph.vertexSet().size() + " vertici e " + graph.edgeSet().size() + " archi.\n\n");
+    	
+    	List<Set<Track>> connesse = model.connesse();
+    	
+    	for (Set<Track> set : connesse) {
+    		List<Track> list = new ArrayList<>(set);
+    		txtResult.appendText("Componente con " + set.size() + " vertici, inseriti in " + list.get(0).getNumPlaylist() + " playlist\n");
+    	}
+    	
+    	this.btnPlaylist.setDisable(false);
 
     }
 
@@ -70,6 +144,9 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	this.cmbGenere.getItems().addAll(model.getAllGenreName());
+    	this.btnPlaylist.setDisable(true);
     }
 
 }

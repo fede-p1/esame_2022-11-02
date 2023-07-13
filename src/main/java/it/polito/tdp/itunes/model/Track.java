@@ -8,6 +8,16 @@ public class Track {
 	private int bytes;
 	private double unitPrice;
 	
+	int numPlaylist;
+	
+	public int getNumPlaylist() {
+		return numPlaylist;
+	}
+
+	public void setNumPlaylist(int numPlaylist) {
+		this.numPlaylist = numPlaylist;
+	}
+
 	public Track(Integer trackId, String name, String composer, int milliseconds, int bytes, double unitPrice) {
 		super();
 		this.trackId = trackId;

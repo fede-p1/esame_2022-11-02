@@ -12,6 +12,7 @@ import it.polito.tdp.itunes.model.Artist;
 import it.polito.tdp.itunes.model.Genre;
 import it.polito.tdp.itunes.model.MediaType;
 import it.polito.tdp.itunes.model.Playlist;
+import it.polito.tdp.itunes.model.PlaylistTrack;
 import it.polito.tdp.itunes.model.Track;
 
 public class ItunesDAO {
@@ -139,6 +140,120 @@ public class ItunesDAO {
 		return result;
 	}
 
+	public List<String> getAllGenreName(){
+		final String sql = "SELECT DISTINCT name "
+				+ "FROM genre "
+				+ "ORDER BY NAME ASC";
+		List<String> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(res.getString("name"));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
 	
+	public double getMin(String nameGenre){
+		final String sql = "SELECT MIN(track.Milliseconds/1000) AS min "
+				+ "FROM track, Genre "
+				+ "WHERE genre.GenreId = track.GenreId AND genre.Name = ?";
+		Double d = 0.0;
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, nameGenre);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				d = res.getDouble("min");
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return d;
+	}
 	
+	public double getMax(String nameGenre){
+		final String sql = "SELECT MAX(track.Milliseconds/1000) AS max "
+				+ "FROM track, Genre "
+				+ "WHERE genre.GenreId = track.GenreId AND genre.Name = ?";
+		Double d = 0.0;
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, nameGenre);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				d = res.getDouble("max");
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return d;
+	}
+	
+	public List<Track> getTracks(String genreName, double min, double max){
+		final String sql = "SELECT track.* "
+				+ "FROM track, Genre "
+				+ "WHERE genre.GenreId = track.GenreId AND genre.Name = ? AND Milliseconds/1000 > ? AND Milliseconds/1000 < ?";
+		List<Track> result = new ArrayList<Track>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, genreName);
+			st.setDouble(2, min);
+			st.setDouble(3, max);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new Track(res.getInt("TrackId"), res.getString("Name"), 
+						res.getString("Composer"), res.getInt("Milliseconds"), 
+						res.getInt("Bytes"),res.getDouble("UnitPrice")));
+			
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
+	public List<PlaylistTrack> getAllPlaylistTrack(){
+		final String sql = "SELECT * FROM PlaylistTrack";
+		List<PlaylistTrack> result = new ArrayList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new PlaylistTrack(res.getInt("PlaylistId"),res.getInt("TrackId")));
+			
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
 }
